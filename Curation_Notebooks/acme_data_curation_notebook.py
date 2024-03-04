@@ -47,23 +47,21 @@ from pyspark.sql.window import Window
 # Define a window function to rank stores within each province based on total sales
 window_spec = Window.partitionBy("province").orderBy(col("total_sales").desc())
 
-# Add a rank column to identify the top stores in each province
+#top stores in each province
 ranked_store_province_sales = store_province_sales.withColumn("rank", rank().over(window_spec))
 
-# Calculate the average sales and units for each province
+#average sales and units for each province
 province_avg = store_province_sales.groupBy("province") \
     .agg(avg("total_sales").alias("avg_sales"), avg("total_units").alias("avg_units"))
 
-# Join the ranked store sales with province averages
+# Joining the ranked store sales with province averages
 comparison_df = ranked_store_province_sales.join(province_avg, "province")
 
-# Calculate the performance compared to the average store of the province
+# Calculating the performance compared to the average store of the province
 comparison_df = comparison_df.withColumn("sales_vs_avg", col("total_sales") / col("avg_sales"))
 comparison_df = comparison_df.withColumn("units_vs_avg", col("total_units") / col("avg_units"))
 
-# Show the comparison results
-# comparison_df.show()
-display(comparison_df)
+#display(comparison_df)
 
 
 # COMMAND ----------
@@ -75,17 +73,16 @@ display(comparison_df)
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, sum
 product_df = spark.sql("select * from acme_products")
-# Join the transaction and product tables based on the product_key column
+
 joined_df = transaction_df.join(product_df, "product_key")
 
-# Aggregate the joined data by product category to calculate total sales for each category
+
 category_sales = joined_df.groupBy("category") \
     .agg(sum("sales").alias("total_sales"))
 
-# Find the category with the highest total sales
+
 top_category = category_sales.orderBy(col("total_sales").desc()).first()
 display(category_sales)
-# Print the result
 print("Category contributing most to ACME's sales:", top_category["category"])
 
 
@@ -98,12 +95,12 @@ print("Category contributing most to ACME's sales:", top_category["category"])
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, sum, rank
 
-# Assuming you have a SparkSession named spark and a DataFrame named transaction_df containing transaction data
+
 transaction_df = spark.sql("select * from transactions_curated")
 location_df = spark.sql("select * from acme_location")
 joined_df = transaction_df.join(location_df, "store_location_key")
 
-# Group the transaction data by store and province, and calculate total sales for each store within each province
+# Grouping the transaction data by store and province, and calculating total sales for each store within each province
 store_province_sales = joined_df.groupBy("store_location_key", "province") \
     .agg(sum("sales").alias("total_sales"))
 
@@ -114,9 +111,7 @@ ranked_sales = store_province_sales.withColumn("rank", rank().over(window_spec))
 # Select the top 5 stores for each province
 top_5_stores_by_province = ranked_sales.filter(col("rank") <= 5)
 
-# Show the result
-# top_5_stores_by_province.show()
-display(top_5_stores_by_province)
+# display(top_5_stores_by_province)
 
 
 # COMMAND ----------
@@ -128,25 +123,23 @@ display(top_5_stores_by_province)
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, sum, rank
 
-# Assuming you have a SparkSession named spark and a DataFrame named product_df containing product data
 transaction_df = spark.sql("select * from transactions_curated")
 product_df = spark.sql("select * from acme_products")
 joined_df = transaction_df.join(product_df, "product_key")
 
-# Group the product data by department and category, and calculate total sales for each category within each department
+
 category_sales_by_department = joined_df.groupBy("department", "category") \
     .agg(sum("sales").alias("total_sales"))
 
-# Rank the categories within each department based on total sales
+
 window_spec = Window.partitionBy("department").orderBy(col("total_sales").desc())
 ranked_sales = category_sales_by_department.withColumn("rank", rank().over(window_spec))
 
 # Select the top 10 categories for each department
 top_10_categories_by_department = ranked_sales.filter(col("rank") <= 10)
 
-# Show the result
-# top_10_categories_by_department.show()
-display(top_10_categories_by_department)
+
+#display(top_10_categories_by_department)
 
 
 # COMMAND ----------
